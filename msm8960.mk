@@ -270,6 +270,7 @@ PRODUCT_COPY_FILES += \
 # Shims
 PRODUCT_PACKAGES += \
     libshims_atomic \
+    libshims_camera \
     libshims_sensor_poll
 
 # USB

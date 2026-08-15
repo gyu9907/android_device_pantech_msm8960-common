@@ -27,3 +27,11 @@ LOCAL_SRC_FILES := sensor_poll.cpp
 LOCAL_MODULE := libshims_sensor_poll
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := camera.cpp
+LOCAL_MODULE := libshims_camera
+LOCAL_MODULE_TAGS := optional
+LOCAL_C_INCLUDES := external/skia/include/core
+LOCAL_SHARED_LIBRARIES := libicuuc libskia
+include $(BUILD_SHARED_LIBRARY)
