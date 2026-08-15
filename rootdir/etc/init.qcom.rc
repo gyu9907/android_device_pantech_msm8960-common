@@ -276,6 +276,8 @@ on post-fs-data
 
     # Wifi firmware reload path
     chown wifi wifi /sys/module/dhd/parameters/firmware_path
+    chown wifi wifi /sys/module/wlan/parameters/fwpath
+    chmod 0660 /sys/module/wlan/parameters/fwpath
 
     # Mounting of persist is moved to 'on emmc-fs' and 'on fs' sections
     # We chown/chmod /persist again so because mount is run as root + defaults
