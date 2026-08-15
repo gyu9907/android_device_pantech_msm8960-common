@@ -239,6 +239,10 @@ PRODUCT_PACKAGES += \
     android.hardware.light@2.0-service \
     lights.msm8960
 
+# Power
+PRODUCT_PACKAGES += \
+    android.hardware.power@1.1-service-qti
+
 # NFC Support
 # PRODUCT_PACKAGES += \
     android.hardware.nfc@1.0-impl \
