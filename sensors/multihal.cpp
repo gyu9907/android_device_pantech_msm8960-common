@@ -86,6 +86,7 @@ struct FullHandle {
 
 std::map<int, FullHandle> global_to_full;
 std::map<FullHandle, int> full_to_global;
+std::map<int, int64_t> legacy_batch_periods;
 int next_global_handle = 1;
 
 static int assign_global_handle(int module_index, int local_handle) {
@@ -290,6 +291,17 @@ int sensors_poll_context_t::activate(int handle, int enabled) {
     sensors_poll_device_t* v0 = this->get_v0_device_by_handle(handle);
     if (local_handle >= 0 && v0) {
         retval = v0->activate(v0, local_handle, enabled);
+        if (retval == 0 && enabled && legacy_batch_periods.count(handle) != 0) {
+            // Android O configures sensors with batch() before activate().
+            // This legacy QCOM HAL ignores setDelay() while a sensor is
+            // inactive, so apply the cached period again after activation.
+            int delay_ret = v0->setDelay(v0, local_handle,
+                    legacy_batch_periods[handle]);
+            if (delay_ret < 0) {
+                ALOGE("setDelay() after activate() returned %d", delay_ret);
+                retval = delay_ret;
+            }
+        }
     } else {
         ALOGE("IGNORING activate(enable %d) call to non-API-compliant sensor handle=%d !",
                 enabled, handle);
@@ -394,18 +406,13 @@ int sensors_poll_context_t::batch(int handle, int flags, int64_t period_ns, int6
                 return -EINVAL;
             }
 
-            // The HAL should silently clamp period_ns. Here it is assumed
-            // that maxDelay and minDelay are set properly
-            int sub_index = get_module_index(handle);
-            int maxDelay = global_sensors_list[sub_index].maxDelay;
-            int minDelay = global_sensors_list[sub_index].minDelay;
-            if (period_ns < minDelay) {
-                period_ns = minDelay;
-            } else if (period_ns > maxDelay) {
-                period_ns = maxDelay;
-            }
-
-            retval = v1->setDelay((sensors_poll_device_t*)v1, handle, period_ns);
+            // Legacy sub-HALs use their original local handles. The sub-HAL
+            // is also responsible for clamping the requested period. The
+            // sensor_t minDelay/maxDelay fields are expressed in
+            // microseconds, while this API uses nanoseconds, so comparing
+            // them directly here corrupts the requested rate.
+            legacy_batch_periods[handle] = period_ns;
+            retval = v1->setDelay((sensors_poll_device_t*)v1, local_handle, period_ns);
 
             // Batch should only fail for internal errors
             if (retval < 0) {

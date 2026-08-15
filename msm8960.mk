@@ -257,11 +257,16 @@ PRODUCT_COPY_FILES += \
 # Sensors
 PRODUCT_PACKAGES += \
     android.hardware.sensors@1.0-impl \
+    android.hardware.sensors@1.0-service \
     sensors.msm8960
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/sensors/_hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/_hals.conf
 
 # Shims
 PRODUCT_PACKAGES += \
-    libshims_atomic
+    libshims_atomic \
+    libshims_sensor_poll
 
 # USB
 PRODUCT_PACKAGES += \

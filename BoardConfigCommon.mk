@@ -121,6 +121,7 @@ BOARD_USES_QCOM_HARDWARE := true
 # Shims
 TARGET_LD_SHIM_LIBS := \
     /system/vendor/bin/mpdecision|libshims_atomic.so \
+    /system/vendor/bin/sensors.qcom|libshims_sensor_poll.so \
 
 # Init
 TARGET_NO_INITLOGO := true
