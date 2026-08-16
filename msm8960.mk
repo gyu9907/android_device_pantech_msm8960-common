@@ -19,6 +19,9 @@
 
 $(call inherit-product, vendor/pantech/msm8960-common/msm8960-common-vendor.mk)
 
+PRODUCT_PACKAGES += \
+    camera.msm8960
+
 DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 
 # WiFi
