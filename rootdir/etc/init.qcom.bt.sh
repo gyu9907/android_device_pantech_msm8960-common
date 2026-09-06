@@ -53,8 +53,42 @@ failed ()
 
 program_bdaddr ()
 {
-  /system/bin/btnvtool -O
-  logi "Bluetooth Address programmed successfully"
+  /system/vendor/bin/btnvtool -O || loge "Bluetooth NV initialization failed"
+
+  # The HIDL HAL needs an address before opening the vendor library. The
+  # Qualcomm NV file starts with a BD_ADDR record (tag 1, flags 0, length 6),
+  # whose payload is little endian. Use the same address as hci_qcomm_init.
+  nv_address=$(od -An -tx1 -N9 /persist/.bt_nv.bin 2>/dev/null |
+    awk '$1 == "01" && $2 == "00" && $3 == "06" && NF == 9 {
+      print $9 ":" $8 ":" $7 ":" $6 ":" $5 ":" $4
+    }')
+  bdaddr_path=/data/misc/bluetooth/bdaddr
+  # Retain support for older installations with a textual address file.
+  for address in "$nv_address" "$(cat "$bdaddr_path" 2>/dev/null)" \
+      "$(cat /persist/bdaddr 2>/dev/null)"; do
+    address=$(echo "$address" | tr '.' ':' | tr -d '\r\n')
+    if ! echo "$address" | /system/bin/grep -Eq '^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$'; then
+      continue
+    fi
+    case "$address" in
+      00:00:00:00:00:00|[fF][fF]:[fF][fF]:[fF][fF]:[fF][fF]:[fF][fF]:[fF][fF]) continue ;;
+    esac
+    mkdir -p /data/misc/bluetooth
+    chown bluetooth:bluetooth /data/misc/bluetooth
+    chmod 0770 /data/misc/bluetooth
+    if ! echo "$address" > "$bdaddr_path.tmp"; then
+      loge "Unable to write Bluetooth address"
+      return 1
+    fi
+    chown bluetooth:bluetooth "$bdaddr_path.tmp"
+    chmod 0600 "$bdaddr_path.tmp"
+    mv "$bdaddr_path.tmp" "$bdaddr_path"
+    restorecon "$bdaddr_path"
+    logi "Bluetooth address prepared for the HAL"
+    return 0
+  done
+  loge "No valid persisted Bluetooth address found"
+  return 1
 }
 
 #
@@ -268,7 +302,7 @@ case $LE_POWER_CLASS in
      logi "LE Power Class: To override, Before turning BT ON; setprop qcom.bt.le_dev_pwr_class <1 or 2 or 3>";;
 esac
 
-eval $(/system/bin/hci_qcomm_init -e $PWR_CLASS $LE_PWR_CLASS && echo "exit_code_hci_qcomm_init=0" || echo "exit_code_hci_qcomm_init=1")
+eval $(/system/vendor/bin/hci_qcomm_init -e $PWR_CLASS $LE_PWR_CLASS && echo "exit_code_hci_qcomm_init=0" || echo "exit_code_hci_qcomm_init=1")
 
 case $exit_code_hci_qcomm_init in
   0) logi "Bluetooth QSoC firmware download succeeded, $BTS_DEVICE $BTS_TYPE $BTS_BAUD $BTS_ADDRESS";;

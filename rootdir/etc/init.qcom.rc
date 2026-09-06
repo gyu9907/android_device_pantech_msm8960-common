@@ -475,7 +475,7 @@ service qcom-sh /system/vendor/bin/sh /init.qcom.sh
     user root
     oneshot
 
-service config_bluetooth /system/bin/sh /system/etc/init.qcom.bt.sh "onboot"
+service config_bluetooth /system/bin/sh /system/vendor/etc/init.qcom.bt.sh "onboot"
     class core
     user root
     oneshot
