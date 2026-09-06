@@ -70,6 +70,8 @@ on boot
    #start qcamerasvr
 
 on post-fs-data
+   # Restore per-device Prima MAC generation before Wi-Fi services start.
+   write /sys/devices/platform/wcnss_wlan.0/serial_number ${ro.serialno}
    mkdir /data/tombstones 0771 system system
    mkdir /tombstones/modem 0771 system system
    mkdir /tombstones/lpass 0771 system system
@@ -150,4 +152,3 @@ service wcnss-service /vendor/bin/wcnss_service
     user system
     group system wifi
     oneshot
-
