@@ -91,6 +91,13 @@ TARGET_USES_MEDIA_EXTENSIONS := true
 TARGET_NEEDS_LEGACY_CAMERA_HAL1_DYN_NATIVE_HANDLE := true
 TARGET_NEEDS_PLATFORM_TEXT_RELOCATIONS:= true
 
+# Legacy blobs require pre-Marshmallow text relocation compatibility.
+TARGET_PROCESS_SDK_VERSION_OVERRIDE := \
+    /system/bin/audioserver=22 \
+    /system/bin/cameraserver=22 \
+    /system/vendor/bin/mm-qcamera-daemon=22 \
+    /system/vendor/bin/sensors.qcom=22
+
 # HIDL
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
 DEVICE_MATRIX_FILE := $(COMMON_PATH)/compatibility_matrix.xml
@@ -124,6 +131,7 @@ TARGET_LD_SHIM_LIBS := \
     /system/vendor/bin/mpdecision|libshims_atomic.so \
     /system/vendor/bin/sensors.qcom|libshims_sensor_poll.so \
     /system/vendor/lib/libqc-opt.so|libshims_camera.so \
+    /system/vendor/lib/hw/camera.msm8960.vendor.so|libshims_camera_parameters.so \
 
 # Init
 TARGET_NO_INITLOGO := true

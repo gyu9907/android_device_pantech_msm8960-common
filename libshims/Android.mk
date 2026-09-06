@@ -16,6 +16,13 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_SRC_FILES := camera_parameters.cpp
+LOCAL_MODULE := libshims_camera_parameters
+LOCAL_MODULE_TAGS := optional
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../include
+include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_SRC_FILES := atomic.cpp
 LOCAL_MODULE := libshims_atomic
 LOCAL_MODULE_TAGS := optional
