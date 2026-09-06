@@ -16,10 +16,12 @@
 
 #define LOG_TAG "PantechCameraWrapper"
 
+#include <atomic>
 #include <cstdint>
 #include <dlfcn.h>
 #include <errno.h>
 #include <hardware/camera.h>
+#include <hardware/gralloc.h>
 #include <log/log.h>
 #include <utils/Mutex.h>
 
@@ -46,6 +48,16 @@ struct WrappedDevice {
     camera_device_ops_t* vendorOps;
     int (*vendorClose)(hw_device_t* device);
     camera_device_ops_t ops;
+    std::atomic<int32_t> enabledMessages{0};
+    camera_notify_callback notify;
+    camera_data_callback data;
+    camera_data_timestamp_callback timestamp;
+    camera_request_memory memory;
+    void* callbackUser;
+    size_t callbackSlot;
+    preview_stream_ops* window;
+    int (*setUsage)(preview_stream_ops*, int);
+
 };
 
 void* gVendorHandle;
@@ -58,6 +70,7 @@ using InitRecordStream = int (*)(void*, uint8_t, uint8_t);
 InitRecordStream gInitRecordStream;
 android::Mutex gLock;
 std::vector<WrappedDevice*> gDevices;
+WrappedDevice* gMemoryDevices[4] = {};
 
 WrappedDevice* findDeviceLocked(camera_device_t* device) {
     for (WrappedDevice* wrapped : gDevices) {
@@ -133,6 +146,135 @@ int ensureRecordStream(camera_device_t* device) {
         return -ENODEV;
     }
     return gInitRecordStream(recordStream, 0, 1);
+}
+
+// Pie installs the HAL callbacks during open(), before CameraClient has
+// installed its own callbacks. The legacy blob can send unsolicited events
+// in that interval; only forward notifications requested by enable_msg_type.
+void notifyCallback(int32_t type, int32_t ext1, int32_t ext2, void* user) {
+    auto wrapped = static_cast<WrappedDevice*>(user);
+    if ((wrapped->enabledMessages.load() & type) != 0 && wrapped->notify) {
+        wrapped->notify(type, ext1, ext2, wrapped->callbackUser);
+    }
+}
+
+void dataCallback(int32_t type, const camera_memory_t* data, unsigned int index,
+                  camera_frame_metadata_t* metadata, void* user) {
+    auto wrapped = static_cast<WrappedDevice*>(user);
+    if ((wrapped->enabledMessages.load() & type) != 0 && wrapped->data) {
+        wrapped->data(type, data, index, metadata, wrapped->callbackUser);
+    }
+}
+
+void timestampCallback(int64_t timestamp, int32_t type,
+                       const camera_memory_t* data, unsigned int index, void* user) {
+    auto wrapped = static_cast<WrappedDevice*>(user);
+    if ((wrapped->enabledMessages.load() & type) != 0 && wrapped->timestamp) {
+        wrapped->timestamp(timestamp, type, data, index, wrapped->callbackUser);
+    }
+}
+
+template <size_t Slot>
+camera_memory_t* memoryCallback(int fd, size_t size, unsigned int count, void*) {
+    camera_request_memory memory = nullptr;
+    void* callbackUser = nullptr;
+    {
+        android::Mutex::Autolock lock(gLock);
+        // The blob passes either its HAL or a stream object as the cookie.
+        // A per-device trampoline restores the actual set_callbacks cookie
+        // without depending on the layout of those proprietary objects.
+        WrappedDevice* wrapped = gMemoryDevices[Slot];
+        if (wrapped != nullptr) {
+            memory = wrapped->memory;
+            callbackUser = wrapped->callbackUser;
+        }
+    }
+    return memory ? memory(fd, size, count, callbackUser) : nullptr;
+}
+
+constexpr camera_request_memory kMemoryCallbacks[] = {
+    memoryCallback<0>, memoryCallback<1>, memoryCallback<2>, memoryCallback<3>,
+};
+
+void wrappedSetCallbacks(camera_device_t* device, camera_notify_callback notify,
+                         camera_data_callback data,
+                         camera_data_timestamp_callback timestamp,
+                         camera_request_memory memory, void* user) {
+    WrappedDevice* wrapped;
+    {
+        android::Mutex::Autolock lock(gLock);
+        wrapped = findDeviceLocked(device);
+    }
+    if (wrapped == nullptr) return;
+    wrapped->notify = notify;
+    wrapped->data = data;
+    wrapped->timestamp = timestamp;
+    wrapped->memory = memory;
+    wrapped->callbackUser = user;
+    wrapped->vendorOps->set_callbacks(device, notifyCallback, dataCallback,
+                                     timestampCallback, kMemoryCallbacks[wrapped->callbackSlot], wrapped);
+}
+
+void wrappedEnableMsgType(camera_device_t* device, int32_t types) {
+    WrappedDevice* wrapped;
+    {
+        android::Mutex::Autolock lock(gLock);
+        wrapped = findDeviceLocked(device);
+    }
+    if (wrapped == nullptr) return;
+    wrapped->enabledMessages.fetch_or(types);
+    wrapped->vendorOps->enable_msg_type(device, types);
+}
+
+void wrappedDisableMsgType(camera_device_t* device, int32_t types) {
+    WrappedDevice* wrapped;
+    {
+        android::Mutex::Autolock lock(gLock);
+        wrapped = findDeviceLocked(device);
+    }
+    if (wrapped == nullptr) return;
+    wrapped->enabledMessages.fetch_and(~types);
+    wrapped->vendorOps->disable_msg_type(device, types);
+}
+
+int wrappedSetUsage(preview_stream_ops* window, int usage) {
+    int (*setUsage)(preview_stream_ops*, int) = nullptr;
+    {
+        android::Mutex::Autolock lock(gLock);
+        for (WrappedDevice* wrapped : gDevices) {
+            if (wrapped->window == window) {
+                setUsage = wrapped->setUsage;
+                break;
+            }
+        }
+    }
+    // Use the MSM8960 IOMMU heap for ordinary preview buffers. The legacy
+    // MM heap flag occupies bit 31, which the HAL1 HIDL adapter sign-extends
+    // into invalid 64-bit usage bits on Pie. Protected buffers keep their
+    // original heap requirements.
+    if (!(usage & GRALLOC_USAGE_PROTECTED) &&
+            (static_cast<uint32_t>(usage) & GRALLOC_USAGE_PRIVATE_3)) {
+        usage = (static_cast<uint32_t>(usage) & ~GRALLOC_USAGE_PRIVATE_3) |
+                GRALLOC_USAGE_PRIVATE_2;
+    }
+    return setUsage ? setUsage(window, usage) : -ENODEV;
+}
+
+int wrappedSetPreviewWindow(camera_device_t* device, preview_stream_ops* window) {
+    camera_device_ops_t* vendorOps;
+    {
+        android::Mutex::Autolock lock(gLock);
+        WrappedDevice* wrapped = findDeviceLocked(device);
+        if (wrapped == nullptr) return -ENODEV;
+        if (wrapped->window != nullptr) {
+            wrapped->window->set_usage = wrapped->setUsage;
+        }
+        wrapped->window = window;
+        wrapped->setUsage = window ? window->set_usage : nullptr;
+        if (window != nullptr) window->set_usage = wrappedSetUsage;
+        vendorOps = wrapped->vendorOps;
+    }
+    return vendorOps->set_preview_window(device, window);
 }
 
 int wrappedStartPreview(camera_device_t* device) {
@@ -250,6 +392,9 @@ int wrappedClose(hw_device_t* hwDevice) {
         for (auto it = gDevices.begin(); it != gDevices.end(); ++it) {
             if ((*it)->device == device) {
                 wrapped = *it;
+                if (wrapped->window != nullptr) {
+                    wrapped->window->set_usage = wrapped->setUsage;
+                }
                 gDevices.erase(it);
                 break;
             }
@@ -264,6 +409,10 @@ int wrappedClose(hw_device_t* hwDevice) {
     device->common.close = wrapped->vendorClose;
     int rc = wrapped->vendorClose != nullptr
             ? wrapped->vendorClose(&device->common) : 0;
+    {
+        android::Mutex::Autolock lock(gLock);
+        gMemoryDevices[wrapped->callbackSlot] = nullptr;
+    }
     delete wrapped;
     return rc;
 }
@@ -282,11 +431,15 @@ int wrappedOpen(const hw_module_t*, const char* id, hw_device_t** hwDevice) {
     }
 
     camera_device_t* device = reinterpret_cast<camera_device_t*>(vendorHwDevice);
-    WrappedDevice* wrapped = new WrappedDevice;
+    WrappedDevice* wrapped = new WrappedDevice{};
     wrapped->device = device;
     wrapped->vendorOps = device->ops;
     wrapped->vendorClose = device->common.close;
     wrapped->ops = *device->ops;
+    wrapped->ops.set_preview_window = wrappedSetPreviewWindow;
+    wrapped->ops.set_callbacks = wrappedSetCallbacks;
+    wrapped->ops.enable_msg_type = wrappedEnableMsgType;
+    wrapped->ops.disable_msg_type = wrappedDisableMsgType;
     wrapped->ops.set_parameters = wrappedSetParameters;
     wrapped->ops.store_meta_data_in_buffers = wrappedStoreMetaDataInBuffers;
     wrapped->ops.start_preview = wrappedStartPreview;
@@ -296,6 +449,17 @@ int wrappedOpen(const hw_module_t*, const char* id, hw_device_t** hwDevice) {
     device->common.close = wrappedClose;
     {
         android::Mutex::Autolock lock(gLock);
+        size_t slot = 0;
+        while (slot < 4 && gMemoryDevices[slot] != nullptr) ++slot;
+        if (slot == 4) {
+            device->ops = wrapped->vendorOps;
+            device->common.close = wrapped->vendorClose;
+            if (wrapped->vendorClose) wrapped->vendorClose(vendorHwDevice);
+            delete wrapped;
+            return -EMFILE;
+        }
+        wrapped->callbackSlot = slot;
+        gMemoryDevices[slot] = wrapped;
         gDevices.push_back(wrapped);
     }
 
