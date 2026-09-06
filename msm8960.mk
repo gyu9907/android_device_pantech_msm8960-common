@@ -132,8 +132,7 @@ PRODUCT_PACKAGES += \
 
 # Configstore
 PRODUCT_PACKAGES += \
-    android.hardware.configstore@1.0-impl \
-    android.hardware.configstore@1.0-service
+    android.hardware.configstore@1.1-service
 
 #GPS
 #PRODUCT_PACKAGES += \
@@ -273,6 +272,7 @@ PRODUCT_PACKAGES += \
     libshims_atomic \
     libshims_camera \
     libshims_camera_parameters \
+    libskia \
     libshims_sensor_poll
 
 # USB

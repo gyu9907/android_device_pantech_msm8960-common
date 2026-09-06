@@ -68,6 +68,8 @@ TARGET_USES_ION					:= true
 TARGET_DISPLAY_INSECURE_MM_HEAP 	:= true
 HAVE_ADRENO_SOURCE				:= false
 NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
+# msm8960 uses GRALLOC_USAGE_PRIVATE_NONSECURE.
+TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS := 0x02000000U
 
 # LightHAL
 TARGET_PROVIDES_LIBLIGHT 			:= true
@@ -100,7 +102,6 @@ TARGET_PROCESS_SDK_VERSION_OVERRIDE := \
 
 # HIDL
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
-DEVICE_MATRIX_FILE := $(COMMON_PATH)/compatibility_matrix.xml
 
 # Ril class
 BOARD_RIL_CLASS := ../../../device/pantech/msm8960-common/ril/
@@ -143,7 +144,7 @@ BOARD_CHARGER_ENABLE_SUSPEND 		:= true
 TARGET_KEYMASTER_WAIT_FOR_QSEE := true
 
 # qcom sepolicy
-include device/qcom/sepolicy/sepolicy.mk
+include device/qcom/sepolicy-legacy/sepolicy.mk
 
 #BOARD_SEPOLICY_DIRS += \
        device/pantech/msm8960-common/sepolicy
