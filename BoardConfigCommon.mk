@@ -101,7 +101,8 @@ TARGET_PROCESS_SDK_VERSION_OVERRIDE := \
     /system/bin/audioserver=22 \
     /system/bin/cameraserver=22 \
     /system/vendor/bin/mm-qcamera-daemon=22 \
-    /system/vendor/bin/sensors.qcom=22
+    /system/vendor/bin/sensors.qcom=22 \
+    /system/vendor/bin/hw/android.hardware.sensors@1.0-service=22
 
 # HIDL
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml

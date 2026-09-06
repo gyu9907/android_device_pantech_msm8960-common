@@ -765,18 +765,31 @@ static int open_sensors(const struct hw_module_t* hw_module, const char* name,
     pthread_mutex_lock(&queue_mutex);
 
     sub_hw_versions = new std::unordered_map<hw_module_t *, int>();
-    // Open() the subhal modules. Remember their devices in a vector parallel to sub_hw_modules.
-    for (std::vector<hw_module_t*>::iterator it = sub_hw_modules->begin();
-            it != sub_hw_modules->end(); it++) {
-        sensors_module_t *sensors_module = (sensors_module_t*) *it;
-        struct hw_device_t* sub_hw_device;
-        int sub_open_result = sensors_module->common.methods->open(*it, name, &sub_hw_device);
-        if (!sub_open_result) {
-            ALOGV("This HAL reports API level : %s",
-                    apiNumToStr(sub_hw_device->version));
-            dev->addSubHwDevice(sub_hw_device);
-            sub_hw_versions->insert(std::make_pair(*it, sub_hw_device->version));
+    std::vector<hw_device_t*> opened_devices;
+    // Do not publish a partially opened HAL. During boot sensors.qcom may
+    // not have created its socket yet. Let init restart the HIDL service
+    // instead of looking up missing device versions in get_sensors_list().
+    for (hw_module_t* module : *sub_hw_modules) {
+        hw_device_t* sub_hw_device = nullptr;
+        int rc = module->methods->open(module, name, &sub_hw_device);
+        if (rc != 0) {
+            ALOGE("Unable to open sensor sub-HAL %s: %d", module->name, rc);
+            for (hw_device_t* opened : opened_devices) {
+                opened->close(opened);
+            }
+            delete sub_hw_versions;
+            sub_hw_versions = nullptr;
+            pthread_mutex_unlock(&queue_mutex);
+            delete dev;
+            *hw_device_out = nullptr;
+            return rc;
         }
+        opened_devices.push_back(sub_hw_device);
+        sub_hw_versions->insert(std::make_pair(module, sub_hw_device->version));
+    }
+    // Start poll threads only after every sub-HAL opened successfully.
+    for (hw_device_t* opened : opened_devices) {
+        dev->addSubHwDevice(opened);
     }
 
     // Prepare the output param and return
