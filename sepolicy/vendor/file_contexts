@@ -1,0 +1,9 @@
+# Camera firmware opened by the CE1502 driver at fixed root paths.
+/CE150F00\.bin       u:object_r:rootfs:s0
+/CE150F01\.bin       u:object_r:rootfs:s0
+/CE150F02_89\.bin    u:object_r:rootfs:s0
+/CE150F03_89\.bin    u:object_r:rootfs:s0
+
+# Mount points and legacy link in the read-only system root.
+/firmware           u:object_r:firmware_file:s0
+/tombstones         u:object_r:rootfs:s0

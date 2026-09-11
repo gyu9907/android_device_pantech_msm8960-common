@@ -14,6 +14,9 @@
 
 LOCAL_PATH := $(call my-dir)
 
+# ef52 installs its proprietary nfc.msm8960 HAL from the vendor manifest.
+ifneq ($(TARGET_DEVICE),ef52)
+
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := nfc.msm8960
@@ -24,3 +27,5 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_CFLAGS += -D$(TARGET_DEVICE)
 
 include $(BUILD_SHARED_LIBRARY)
+
+endif

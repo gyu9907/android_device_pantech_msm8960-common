@@ -86,7 +86,7 @@ vendor/lib/libqmissa.so:system/vendor/lib/libqmissa.so
 vendor/lib/libnetmgr.so:system/vendor/lib/libnetmgr.so
 vendor/lib/libualutil.so:system/vendor/lib/libualutil.so
 vendor/lib/hw/gps.msm8960.so:system/vendor/lib/hw/gps.msm8960.so
-vendor/lib/hw/nfc.default.so:system/vendor/lib/hw/nfc.default.so
+vendor/lib/hw/nfc.default.so:system/vendor/lib/hw/nfc.msm8960.so
 vendor/lib/libstlport.so:system/vendor/lib/libstlport.so
 vendor/lib/liboem_ssa.so:system/vendor/lib/liboem_ssa.so
 vendor/lib/libvendor_aka.so:system/vendor/lib/libvendor_aka.so
@@ -106,7 +106,6 @@ vendor/lib/libc2d30.so:system/vendor/lib/libc2d30.so
 vendor/lib/libWVphoneAPI.so:system/vendor/lib/libWVphoneAPI.so
 vendor/lib/libadreno_utils.so:system/vendor/lib/libadreno_utils.so
 vendor/lib/libbccQTI.so:system/vendor/lib/libbccQTI.so
-vendor/lib/libbt-vendor.so:system/vendor/lib/libbt-vendor.so
 vendor/lib/libbtnv.so:system/vendor/lib/libbtnv.so
 vendor/lib/libllvm-qcom.so:system/vendor/lib/libllvm-qcom.so
 vendor/lib/librs_adreno.so:system/vendor/lib/librs_adreno.so

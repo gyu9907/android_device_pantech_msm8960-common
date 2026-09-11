@@ -50,11 +50,18 @@ BOARD_MKBOOTIMG_ARGS := --ramdisk_offset 0x2000000
 BOARD_KERNEL_IMAGE_NAME := zImage
 BOARD_KERNEL_CMDLINE := console=NULL,115200,n8 androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x3F ehci-hcd.park=3 loglevel=0 vmalloc=0x16000000
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
-TARGET_KERNEL_CROSS_COMPILE_PREFIX := arm-linux-androideabi-
+# Use Lineage's bundled toolchain with an absolute compiler path.
+TARGET_KERNEL_ADDITIONAL_FLAGS += -j16
 
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
 BOARD_SUPPRESS_EMMC_WIPE := true
+
+# First-stage init switches to the read-only system root on Android 11.
+# Create device mount points and legacy links while building the image.
+BOARD_ROOT_EXTRA_FOLDERS += firmware persist
+BOARD_ROOT_EXTRA_SYMLINKS += /data/tombstones:tombstones
+TARGET_FS_CONFIG_GEN := $(COMMON_PATH)/config.fs
 
 #Init
 TARGET_UNIFIED_DEVICE := true
@@ -113,9 +120,6 @@ BOARD_RIL_CLASS := ../../../device/pantech/msm8960-common/ril/
 # Preload Boot Animation
 TARGET_BOOTANIMATION_PRELOAD 		:= true
 
-# Shipping API
-PRODUCT_SHIPPING_API_LEVEL := 17
-
 # GPS
 BOARD_VENDOR_QCOM_LOC_PDK_FEATURE_SET := true
 TARGET_NO_RPC := true
@@ -150,9 +154,10 @@ TARGET_KEYMASTER_WAIT_FOR_QSEE := true
 # qcom sepolicy
 include device/qcom/sepolicy-legacy/sepolicy.mk
 
-#BOARD_SEPOLICY_DIRS += \
-       device/pantech/msm8960-common/sepolicy
-       
+# Keep the legacy policy separate from the policy ported to Android 11.
+BOARD_VENDOR_SEPOLICY_DIRS += \
+    device/pantech/msm8960-common/sepolicy/vendor
+
 # Wifi
 BOARD_HAS_QCOM_WLAN              		:= true
 BOARD_WLAN_DEVICE                		:= qcwcn

@@ -29,13 +29,13 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #define _REALLY_INCLUDE_SYS__SYSTEM_PROPERTIES_H_
 #include <sys/_system_properties.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 
 #include "vendor_init.h"
-#include "property_service.h"
 
 using android::base::GetProperty;
 
@@ -54,8 +54,7 @@ void property_override(char const prop[], char const value[])
 
 void vendor_load_properties()
 {
-    int n = 0;
-    char device_buf[PROP_VALUE_MAX];
+    char device_buf[PROP_VALUE_MAX] = {};
     FILE *fp = NULL;
 
     std::string platform = GetProperty("ro.board.platform", "");
@@ -69,9 +68,12 @@ void vendor_load_properties()
     }
     else
     {
-        fseek(fp,0x24,SEEK_SET);
-        n = fread(device_buf, 8, 1, fp);
-        device_buf[8] = '\0';        
+        if (fseek(fp, 0x24, SEEK_SET) != 0 ||
+                fread(device_buf, 1, 8, fp) != 8) {
+            fclose(fp);
+            return;
+        }
+        device_buf[8] = '\0';
         fclose(fp);
     }
 	//Prop for ril class
@@ -79,42 +81,42 @@ void vendor_load_properties()
 
     property_override("ro.product.model", device_buf);
 	// A870
-    if (strstr(device_buf, "IM-A870S")) 
+    if (strstr(device_buf, "IM-A870S"))
     {
         property_override("ro.product.device", "ef52s");
-    } 
-    else if (strstr(device_buf, "IM-A870K")) 
+    }
+    else if (strstr(device_buf, "IM-A870K"))
     {
         property_override("ro.product.device", "ef52k");
-    } 
+    }
     else if (strstr(device_buf, "IM-A870L"))
     {
         property_override("ro.product.device", "ef52l");
 		property_override("telephony.lteOnCdmaDevice", "1"); //Only L device support CDMA-2000 1xEV-DO
     }
     //A860
-    if (strstr(device_buf, "IM-A860S")) 
+    if (strstr(device_buf, "IM-A860S"))
     {
         property_override("ro.product.device", "ef51l");
-    } 
-    else if (strstr(device_buf, "IM-A860K")) 
+    }
+    else if (strstr(device_buf, "IM-A860K"))
     {
         property_override("ro.product.device", "ef51k");
-    } 
+    }
     else if (strstr(device_buf, "IM-A860L"))
     {
         property_override("ro.product.device", "ef51l");
 		property_override("telephony.lteOnCdmaDevice", "1"); //Only L device support CDMA-2000 1xEV-DO
     }
 	// A850
-    if (strstr(device_buf, "IM-A850S")) 
+    if (strstr(device_buf, "IM-A850S"))
     {
         property_override("ro.product.device", "ef48s");
-    } 
-    else if (strstr(device_buf, "IM-A850K")) 
+    }
+    else if (strstr(device_buf, "IM-A850K"))
     {
         property_override("ro.product.device", "ef49k");
-    } 
+    }
     else if (strstr(device_buf, "IM-A850L"))
     {
         property_override("ro.product.device", "ef50l");

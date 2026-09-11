@@ -133,3 +133,6 @@ ro.telephony.mms_data_profile=5
 persist.telephony.oosisdc=false
 persist.omh.enabled=1
 ro.telephony.call_ring.delay=0
+
+# Select the proprietary NFC HAL instead of the platform example module.
+ro.hardware.nfc=msm8960

@@ -1,0 +1,11 @@
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+
+cc_library_static {
+    name: "libinit_pantech",
+    recovery_available: true,
+    srcs: ["init_pantech.cpp"],
+    include_dirs: ["system/core/init"],
+    static_libs: ["libbase"],
+    cflags: ["-Wall", "-DANDROID_TARGET=\"msm8960\""],
+}

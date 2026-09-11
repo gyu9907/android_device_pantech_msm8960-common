@@ -539,5 +539,5 @@ extern "C" camera_module_t HAL_MODULE_INFO_SYM = {
     .open_legacy = openLegacy,
     .set_torch_mode = setTorchMode,
     .init = initModule,
-    .reserved = {nullptr, nullptr, nullptr, nullptr, nullptr},
+    .reserved = {},
 };

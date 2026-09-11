@@ -30,8 +30,6 @@ import init.target.rc
 import init.qcom.power.rc
 
 on init
-    # Set permissions for persist partition
-    mkdir /persist 0771 system system
     # Support legacy paths
     symlink /sdcard /mnt/sdcard
     symlink /sdcard /storage/sdcard0
@@ -485,7 +483,7 @@ service config_bluetooth /system/bin/sh /system/vendor/etc/init.qcom.bt.sh "onbo
 service hciattach /system/bin/sh /system/vendor/etc/init.qcom.bt.sh
     class late_start
     user bluetooth
-    group qcom_oncrpc bluetooth net_bt_admin system
+    group bluetooth net_bt_admin system
     disabled
     seclabel u:r:bluetooth_loader:s0
     oneshot
@@ -594,7 +592,7 @@ service ril-daemon1 /system/bin/rild -c 1
     socket rild-debug1 stream 660 radio system
     user root
     disabled
-    group radio cache inet misc audio sdcard_r sdcard_rw qcom_oncrpc diag log
+    group radio cache inet misc audio sdcard_r sdcard_rw diag log
 
 service charger /charger
     class charger
