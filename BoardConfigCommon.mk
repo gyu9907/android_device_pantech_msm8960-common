@@ -77,6 +77,9 @@ HAVE_ADRENO_SOURCE				:= false
 NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
 # msm8960 uses GRALLOC_USAGE_PRIVATE_NONSECURE.
 TARGET_ADDITIONAL_GRALLOC_10_USAGE_BITS := 0x02000000U
+# Legacy Adreno 320 stalls when SurfaceFlinger replaces its output each frame.
+# Reference: mako 2d0efae217ae73d57864d8f7e2e4b7ce587ddea9.
+TARGET_DISABLE_POSTRENDER_CLEANUP := true
 
 # Prima does not expose WLAN residency statistics to the power HAL.
 TARGET_HAS_NO_WLAN_STATS := true
