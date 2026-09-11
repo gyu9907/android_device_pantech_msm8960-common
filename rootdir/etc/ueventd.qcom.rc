@@ -198,3 +198,8 @@
 
 # FEATURE_PANTECH_SND_QSOUND
 /dev/pantech_aud_ctl*     0770   system     audio
+
+# The legacy camera daemon opens configuration nodes under /dev/msm_camera.
+subsystem msm_camera
+    devname uevent_devpath
+    dirname /dev/msm_camera
