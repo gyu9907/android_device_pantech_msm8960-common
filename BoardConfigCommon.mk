@@ -115,6 +115,8 @@ TARGET_PROCESS_SDK_VERSION_OVERRIDE := \
     /system/vendor/bin/hw/android.hardware.sensors@1.0-service=22
 
 # HIDL
+# Avoid libhidl's one-second legacy service lookup delay on Android 11.
+PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := true
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
 
 # Ril class
