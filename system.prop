@@ -141,3 +141,6 @@ ro.telephony.call_ring.delay=0
 
 # Select the proprietary NFC HAL instead of the platform example module.
 ro.hardware.nfc=msm8960
+
+# The 3.4 kernel requires the legacy FunctionFS transport in adbd.
+ro.adb.nonblocking_ffs=false
