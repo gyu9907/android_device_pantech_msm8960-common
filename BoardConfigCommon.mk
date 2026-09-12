@@ -42,6 +42,9 @@ TARGET_CPU_VARIANT := krait
 # Binder
 TARGET_USES_64_BIT_BINDER := true
 
+# The 3.4 kernel includes memfd_create; bypass ART's kernel version check.
+TARGET_HAS_MEMFD_BACKPORT := true
+
 # Boot and recovery config
 BOARD_KERNEL_BASE := 0x80200000
 BOARD_KERNEL_PAGESIZE := 2048
