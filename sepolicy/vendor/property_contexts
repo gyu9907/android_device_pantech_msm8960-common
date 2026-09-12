@@ -1,0 +1,3 @@
+# Legacy kernel feature switches read by bpfloader, netd and lmkd.
+ro.kernel.ebpf.supported    u:object_r:exported_default_prop:s0 exact bool
+ro.lmk.use_psi              u:object_r:lmkd_config_prop:s0 exact bool

@@ -2,7 +2,7 @@
     <hal format="hidl">
         <name>android.hardware.audio</name>
         <transport>hwbinder</transport>
-        <version>2.0</version>
+        <version>6.0</version>
         <interface>
             <name>IDevicesFactory</name>
             <instance>default</instance>
@@ -11,7 +11,7 @@
     <hal format="hidl">
         <name>android.hardware.audio.effect</name>
         <transport>hwbinder</transport>
-        <version>2.0</version>
+        <version>6.0</version>
         <interface>
             <name>IEffectsFactory</name>
             <instance>default</instance>
@@ -130,15 +130,6 @@
         <version>1.0</version>
         <interface>
             <name>IMemtrack</name>
-            <instance>default</instance>
-        </interface>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.nfc</name>
-        <transport arch="32">passthrough</transport>
-        <version>1.0</version>
-        <interface>
-            <name>INfc</name>
             <instance>default</instance>
         </interface>
     </hal>

@@ -16,6 +16,9 @@
 
 COMMON_PATH := device/pantech/msm8960-common
 
+# Keep vendor-only boot properties even without split property overrides.
+TARGET_VENDOR_PROP += $(COMMON_PATH)/vendor.prop
+
 # inherit from the proprietary version
 -include vendor/pantech/msm8960-common/BoardConfigVendor.mk
 TARGET_SPECIFIC_HEADER_PATH 		:= device/pantech/msm8960-common/include
@@ -50,14 +53,17 @@ BOARD_MKBOOTIMG_ARGS := --ramdisk_offset 0x2000000
 BOARD_KERNEL_IMAGE_NAME := zImage
 BOARD_KERNEL_CMDLINE := console=NULL,115200,n8 androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x3F ehci-hcd.park=3 loglevel=0 vmalloc=0x16000000
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
-# Use Lineage's bundled toolchain with an absolute compiler path.
+# Keep the GCC toolchain used by the working 3.4 kernel.
+TARGET_KERNEL_CLANG_COMPILE := false
+# The kernel has memfd_create; ART probes sealing support separately.
+TARGET_HAS_MEMFD_BACKPORT := true
 TARGET_KERNEL_ADDITIONAL_FLAGS += -j16
 
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
 BOARD_SUPPRESS_EMMC_WIPE := true
 
-# First-stage init switches to the read-only system root on Android 11.
+# First-stage init switches to the read-only system root.
 # Create device mount points and legacy links while building the image.
 BOARD_ROOT_EXTRA_FOLDERS += firmware persist
 BOARD_ROOT_EXTRA_SYMLINKS += /data/tombstones:tombstones
@@ -72,6 +78,7 @@ TARGET_RECOVERY_DEVICE_MODULES := libinit_pantech
 BOARD_USES_OVERLAY 				:= true
 USE_OPENGL_RENDERER 				:= true
 TARGET_USES_ION					:= true
+TARGET_USES_C2D_COMPOSITION := true
 TARGET_DISPLAY_INSECURE_MM_HEAP 	:= true
 HAVE_ADRENO_SOURCE				:= false
 NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
@@ -101,21 +108,25 @@ BLUETOOTH_HCI_USE_MCT := true
 
 # Camera
 TARGET_PROVIDES_CAMERA_HAL := true
+TARGET_HAS_LEGACY_CAMERA_HAL1 := true
 USE_DEVICE_SPECIFIC_CAMERA := true
 TARGET_USES_MEDIA_EXTENSIONS := true
+TARGET_USES_QCOM_BSP_LEGACY := true
 TARGET_NEEDS_LEGACY_CAMERA_HAL1_DYN_NATIVE_HANDLE := true
 TARGET_NEEDS_PLATFORM_TEXT_RELOCATIONS:= true
 
 # Legacy blobs require pre-Marshmallow text relocation compatibility.
 TARGET_PROCESS_SDK_VERSION_OVERRIDE := \
     /system/bin/audioserver=22 \
+    /system/vendor/bin/hw/android.hardware.audio.service=22 \
     /system/bin/cameraserver=22 \
+    /system/bin/mediaserver=22 \
     /system/vendor/bin/mm-qcamera-daemon=22 \
     /system/vendor/bin/sensors.qcom=22 \
     /system/vendor/bin/hw/android.hardware.sensors@1.0-service=22
 
 # HIDL
-# Avoid libhidl's one-second legacy service lookup delay on Android 11.
+# Use the declared legacy HALs without the service lookup delay.
 PRODUCT_ENFORCE_VINTF_MANIFEST_OVERRIDE := true
 DEVICE_MANIFEST_FILE := $(COMMON_PATH)/manifest.xml
 
@@ -159,7 +170,7 @@ TARGET_KEYMASTER_WAIT_FOR_QSEE := true
 # qcom sepolicy
 include device/qcom/sepolicy-legacy/sepolicy.mk
 
-# Keep the legacy policy separate from the policy ported to Android 11.
+# Keep obsolete policy separate from the current vendor policy.
 BOARD_VENDOR_SEPOLICY_DIRS += \
     device/pantech/msm8960-common/sepolicy/vendor
 

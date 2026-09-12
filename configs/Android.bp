@@ -1,0 +1,9 @@
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+
+// Android 12 no longer supplies the matrix for devices launched before Treble.
+vintf_compatibility_matrix {
+    name: "framework_compatibility_matrix.legacy.xml",
+    stem: "compatibility_matrix.legacy.xml",
+    srcs: ["compatibility_matrix.legacy.xml"],
+}

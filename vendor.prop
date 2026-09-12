@@ -1,0 +1,3 @@
+# EF52 shipped with Android 4.2.2 (API 17).
+# Android 12 filters this property out of system/build.prop.
+ro.product.first_api_level=17
