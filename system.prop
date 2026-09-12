@@ -56,6 +56,8 @@ media.stagefright.legacyencoder=true
 media.stagefright.less-secure=true
 
 # Display
+# Use MDP composition as on the MSM8960 flo/deb reference device.
+persist.hwc.mdpcomp.enable=true
 debug.hwui.use_buffer_age=false
 
 # Navigation Bar
