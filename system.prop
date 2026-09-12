@@ -55,6 +55,9 @@ media.stagefright.less-secure=true
 # Display
 # Use MDP composition as on the MSM8960 flo/deb reference device.
 persist.hwc.mdpcomp.enable=true
+# Let HWC1 wait for fences during composition instead of skipping a VSYNC.
+debug.sf.disable_backpressure=1
+debug.sf.latch_unsignaled=1
 debug.hwui.use_buffer_age=false
 # Adreno 320 uses the GLES RenderEngine rather than SkiaGL.
 debug.renderengine.backend=threaded
