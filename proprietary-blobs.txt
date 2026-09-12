@@ -99,7 +99,8 @@ vendor/lib/egl/libq3dtools_adreno.so:system/vendor/lib/egl/libq3dtools_adreno.so
 vendor/lib/drm/libdrmwvmplugin.so:system/vendor/lib/drm/libdrmwvmplugin.so
 vendor/lib/libwvdrm_L1.so:system/vendor/lib/libwvdrm_L1.so
 vendor/lib/libWVStreamControlAPI_L1.so:system/vendor/lib/libWVStreamControlAPI_L1.so
-vendor/lib/mediadrm/libwvdrmengine.so:system/vendor/lib/mediadrm/libwvdrmengine.so
+# Protobuf v29 dependency fix from mako vendor commit c74fbd531e9f1af8d5b51f81fc6e1b4421876e11.
+vendor/lib/mediadrm/libwvdrmengine.so:system/vendor/lib/mediadrm/libwvdrmengine.so|3424eb2605ed52082106d1f03b425da9e9b482381f65f16c3e4bd65937e245ef
 vendor/lib/libC2D2.so:system/vendor/lib/libC2D2.so
 vendor/lib/libCB.so:system/vendor/lib/libCB.so
 vendor/lib/libc2d30.so:system/vendor/lib/libc2d30.so
