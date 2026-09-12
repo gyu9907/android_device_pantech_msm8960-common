@@ -124,6 +124,10 @@ PRODUCT_PACKAGES += \
     android.hardware.drm@1.0-impl \
     android.hardware.drm@1.0-service
 
+# Legacy Widevine requires the protobuf ABI from Android 10.
+PRODUCT_PACKAGES += \
+    libprotobuf-cpp-lite-v29
+
 # Bluetooth
 PRODUCT_PACKAGES += \
     android.hardware.bluetooth@1.0-impl \

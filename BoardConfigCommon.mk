@@ -45,6 +45,9 @@ TARGET_CPU_VARIANT := krait
 # Binder
 TARGET_USES_64_BIT_BINDER := true
 
+# The 3.4 kernel includes memfd_create; bypass ART's kernel version check.
+TARGET_HAS_MEMFD_BACKPORT := true
+
 # Boot and recovery config
 BOARD_KERNEL_BASE := 0x80200000
 BOARD_KERNEL_PAGESIZE := 2048
@@ -55,8 +58,6 @@ BOARD_KERNEL_CMDLINE := console=NULL,115200,n8 androidboot.hardware=qcom user_de
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 # Keep the GCC toolchain used by the working 3.4 kernel.
 TARGET_KERNEL_CLANG_COMPILE := false
-# The kernel has memfd_create; ART probes sealing support separately.
-TARGET_HAS_MEMFD_BACKPORT := true
 TARGET_KERNEL_ADDITIONAL_FLAGS += -j16
 
 TARGET_USERIMAGES_USE_EXT4 := true
