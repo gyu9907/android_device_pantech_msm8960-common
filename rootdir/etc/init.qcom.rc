@@ -265,7 +265,8 @@ on post-fs-data
     mkdir /data/connectivity/nsrm 0771 system system
     chown system system /data/connectivity/nsrm
     
-    # Update WIFI MAC address 
+    # Prepare factory addresses before the radio firmware and HALs start.
+    exec_start config_bluetooth
     write /dev/wcnss_wlan 1
     write /sys/module/wcnss_ssr_8960/parameters/enable_riva_ssr 1
 
@@ -480,6 +481,7 @@ service qcom-sh /system/vendor/bin/sh /init.qcom.sh
 service config_bluetooth /system/bin/sh /system/vendor/etc/init.qcom.bt.sh "onboot"
     class core
     user root
+    disabled
     oneshot
 
 service hciattach /system/bin/sh /system/vendor/etc/init.qcom.bt.sh

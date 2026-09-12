@@ -73,7 +73,7 @@ on post-fs-data
    # atrace.rc is imported after late-init on this legacy mount layout.
    # WebView zygote children must be able to reopen the inherited trace fd.
    chmod 0222 /sys/kernel/debug/tracing/trace_marker
-   # Restore per-device Prima MAC generation before Wi-Fi services start.
+   # Keep serial-based MAC generation as a fallback for missing factory data.
    write /sys/devices/platform/wcnss_wlan.0/serial_number ${ro.serialno}
    mkdir /data/tombstones 0771 system system
    mkdir /tombstones/modem 0771 system system
