@@ -205,8 +205,8 @@ PRODUCT_PACKAGES += \
 	CE150F03_89.bin
 
 PRODUCT_PACKAGES += \
-    android.hardware.camera.provider@2.4-impl-legacy \
-    camera.device@1.0-impl-legacy \
+    android.hardware.camera.provider@2.4-impl \
+    camera.device@1.0-impl \
     Camera2
 
 # Qcom scripts

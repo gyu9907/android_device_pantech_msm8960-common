@@ -288,7 +288,24 @@ int wrappedStartPreview(camera_device_t* device) {
         vendorOps = wrapped->vendorOps;
     }
 
-    int rc = ensureRecordStream(device);
+    // An already running preview (including recording) needs no new streams.
+    // Let the vendor HAL handle repeated start_preview calls itself.
+    if (vendorOps->preview_enabled(device)) {
+        return vendorOps->start_preview(device);
+    }
+
+    // After a non-ZSL snapshot, the vendor HAL keeps its capture channel
+    // active until cancelPictureInternal() runs from startPreview(). Adding
+    // our record stream before that cleanup fails with -EINVAL. Use the HAL1
+    // entry point to finish the snapshot first; it is a no-op when stopped.
+    // Do this outside gLock because cleanup can wait for camera callbacks.
+    int rc = vendorOps->cancel_picture(device);
+    if (rc != 0) {
+        ALOGE("Unable to finish vendor snapshot before preview: %d", rc);
+        return rc;
+    }
+
+    rc = ensureRecordStream(device);
     if (rc != 0) {
         ALOGE("Unable to prepare vendor record stream before preview: %d", rc);
         return rc;
