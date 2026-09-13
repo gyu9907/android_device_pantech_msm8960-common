@@ -198,6 +198,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/fstab.qcom:$(TARGET_COPY_OUT_RAMDISK)/fstab.qcom
 
 # Camera
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/mediaserver-permissions.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/mediaserver-permissions.xml
+
 PRODUCT_PACKAGES += \
 	CE150F00.bin \
 	CE150F01.bin \

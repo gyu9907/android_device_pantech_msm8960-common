@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
+    <!-- The legacy camera service runs in mediaserver rather than cameraserver. -->
+    <assign-permission name="android.permission.OBSERVE_SENSOR_PRIVACY" uid="media" />
+</permissions>
