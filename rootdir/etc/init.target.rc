@@ -91,7 +91,8 @@ service kickstart /system/vendor/bin/qcks -i /firmware/image/ -r /data/tombstone
    disabled
 
 service qrngd /vendor/bin/qrngd -f
-   class main
+   # Seed the kernel RNG before post-fs-data waits for Keymaster.
+   class early_hal
    user root
    group root
 
